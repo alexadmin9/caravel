@@ -1,25 +1,29 @@
-FROM ubuntu:14.04
-MAINTAINER amancevice@cargometrics.com
+FROM alpine
+MAINTAINER smallweirdnum@gmail.com
 
-# Setup
-RUN echo as of 2016-06-03 && \
-    apt-get update && \
-    apt-get install -y \
-        build-essential \
-        libssl-dev \
-        libffi-dev \
+# Install requirements
+RUN apk add --no-cache \
         python-dev \
-        python-pip \
-        libmysqlclient-dev && \
-    apt-get build-dep -y psycopg2
-
-# Python
-RUN pip install pip==8.1.2 \
-    pandas==0.18.0 \
-    mysqlclient==1.3.7 \
-    psycopg2==2.6.1 \
-    sqlalchemy-redshift==0.5.0 \
-    caravel==0.9.0
+        py-pip \
+        libstdc++ \
+        mariadb-dev \
+        postgresql-dev \
+        py-cffi && \
+    apk add --no-cache --virtual build-dependencies \
+        musl-dev \
+        gcc \
+        make \
+        cmake \
+        g++ \
+        gfortran && \
+    ln -s /usr/include/locale.h /usr/include/xlocale.h && \
+    pip install \
+        pandas==0.18.0 \
+        MySQL-python==1.2.5 \
+        psycopg2==2.6.1 \
+        sqlalchemy-redshift==0.5.0 \
+        caravel==0.9.0 && \
+    apk del build-dependencies
 
 # Default config
 ENV CSRF_ENABLED=1 \
@@ -32,9 +36,11 @@ ENV CSRF_ENABLED=1 \
     WEBSERVER_THREADS=8
 
 # Run as caravel user
-RUN useradd -b /home -m -U caravel
 COPY caravel /home/caravel
-RUN mkdir /home/caravel/db && chown -R caravel:caravel /home/caravel
+RUN addgroup caravel && \
+    adduser -h /home/caravel -G caravel -D caravel && \
+    mkdir /home/caravel/db && \
+    chown -R caravel:caravel /home/caravel
 WORKDIR /home/caravel
 USER caravel
 
