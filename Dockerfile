@@ -1,29 +1,19 @@
-FROM alpine
+FROM amancevice/pandas:0.18.0
 MAINTAINER smallweirdnum@gmail.com
 
 # Install requirements
-RUN apk add --no-cache \
-        python-dev \
+RUN apk add --no-cache --virtual caravel-dependencies g++ && \
+    apk add --no-cache \
         py-pip \
-        libstdc++ \
         mariadb-dev \
         postgresql-dev \
         py-cffi && \
-    apk add --no-cache --virtual build-dependencies \
-        musl-dev \
-        gcc \
-        make \
-        cmake \
-        g++ \
-        gfortran && \
-    ln -s /usr/include/locale.h /usr/include/xlocale.h && \
     pip install \
-        pandas==0.18.0 \
         MySQL-python==1.2.5 \
         psycopg2==2.6.1 \
         sqlalchemy-redshift==0.5.0 \
         caravel==0.9.0 && \
-    apk del build-dependencies
+    apk del caravel-dependencies
 
 # Default config
 ENV CSRF_ENABLED=1 \
